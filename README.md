@@ -6,7 +6,7 @@
 
 # User stories
 1. **Leita af áhuga**
-   Tómas 
+   Tómas er einmana og langar að spila fótbolta. Þegar hann notar Clubfinder finnur hann hóp 3 einstaklinga sem vilja líka spila fótbolta. Nú getur hann spilað með öðrum og hugsanlega eignast nýja vini
 # Wireframe
 
 ![wireframe](https://github.com/user-attachments/assets/d96f5139-6b65-49ef-bb0f-a4d7a0efbe36)
