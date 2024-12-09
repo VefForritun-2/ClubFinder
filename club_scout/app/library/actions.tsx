@@ -269,6 +269,7 @@ export async function changeInfoAboutUser(formdata:FormData) { // BÆTT VIÐ FIL
         oldUsername: formdata.get("old_username"),
         username: formdata.get("username"),
         email: formdata.get("email"),
+        img: formdata.get("img")
     }
 
     const userData = await getUserData(String(changedInfo.oldUsername))
@@ -406,7 +407,12 @@ export async function createClub(formdata: FormData){
         description: formdata.get("description"),
         logo: formdata.get("logo")
     }
+    if (createdClubData.logo.name != "undefined") {
+        const { data, error } = await supabase.storage
+        .from('profile pic')
+        .upload(createdClubData.logo.name, createdClubData.logo);
 
+    }
     // list af preferences
     let isChecked = false
     let listOfPreferences = []
@@ -428,7 +434,7 @@ export async function createClub(formdata: FormData){
     }
     else if (isChecked === true){
 
-        const {data, error} = await supabase.from("clubs").insert({name:createdClubData.clubName,description:createdClubData.description,owner_id:userData.id}).select()
+        const {data, error} = await supabase.from("clubs").insert({name:createdClubData.clubName,description:createdClubData.description,owner_id:userData.id,img:createdClubData.logo.name}).select()
         const uploadedClubdata = data
         if (error){
             console.log("ERROR í createClub á meðan að setja inn nýja club í supabase:",error)
@@ -482,16 +488,30 @@ export async function ownedClubs(userID:Number){ // búa til kóða fyrir þetta
 export async function editClub(formdata:FormData){
     const cookie = await cookies()
     const preferences = await getPreferences()
-    const userData = await getUserData(String(cookie.get("haveSignedIn")?.value))
+    const userData = await getUserData(cookie.get("haveSignedIn")?.value)
     const editedClubData = {
         clubId: formdata.get("clubId"),
         clubName: formdata.get("clubName"),
         description: formdata.get("description"),
         logo: formdata.get("logo")
     }
-    const clubCategories = await club_preferences(Number(editedClubData.clubId))
+    let logoimg
+console.log(editedClubData.logo)
+if (editedClubData.logo.name != "undefined") {
+    logoimg = editedClubData.logo.name
+    console.log("Uploading image:", logoimg)
 
-    
+    // Attempt to upload the image to Supabase Storage
+    const { data, error } = await supabase.storage
+        .from('profile pic') // Use a proper bucket name
+        .upload(logoimg, editedClubData.logo)
+} else {
+    // Fallback to user's existing image
+    const info = getClubData(editedClubData.clubId)
+    logoimg = info.img
+    console.log("Using existing user image:", logoimg)
+}
+    const clubCategories = await club_preferences(Number(editedClubData.clubId))
     let isChecked = false
     let listOfPreferences = []
 
@@ -514,7 +534,7 @@ export async function editClub(formdata:FormData){
 
         // tók út img:editedClubData.logo frá update hér neðan
 
-        const {error} = await supabase.from("clubs").update({name:editedClubData.clubName,description:editedClubData.description}).eq("id",Number(editedClubData.clubId))
+        const {error} = await supabase.from("clubs").update({name:editedClubData.clubName,description:editedClubData.description,img:logoimg}).eq("id",Number(editedClubData.clubId))
 
         if (error){
             console.log("ERROR í editclub á meðan að update-a club data:",error)

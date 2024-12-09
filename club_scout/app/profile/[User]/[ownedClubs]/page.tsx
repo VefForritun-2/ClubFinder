@@ -63,7 +63,7 @@ export default async function Page({params}: {params:Promise<{User:string}>}){
                     <textarea name="description" id="description" defaultValue={clubData.description} required></textarea>
 
                     <label htmlFor="logo">logo:</label>
-                    <input type="file" name="logo" id="logo"/>{/* DEFAULT VALUE FOR FILE FROM BUCKETS !!!!! */}
+                    <input type="file" name="logo" id="logo"/>
 
                     <label htmlFor="categories">categories:</label>
                     <div id="categories">{/* við getum breyt þetta til option element og finna eih leið til að sækja multiple values */}

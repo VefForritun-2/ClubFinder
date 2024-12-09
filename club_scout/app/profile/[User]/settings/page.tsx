@@ -1,5 +1,5 @@
 
-import { getUserData,changeInfoAboutUser,changePassword,getPreferences, getUserPreferences} from "@/app/library/actions"
+import { getUserData,changeInfoAboutUser,changePassword,getPreferences, getUserPreferences,UploadUserImg} from "@/app/library/actions"
 
 export default async function Page({params}: {params:Promise<{User:string}>}){
 
@@ -66,6 +66,11 @@ export default async function Page({params}: {params:Promise<{User:string}>}){
                 <button type='submit'>Change password</button>
 
             </form>
+            <h2>Chose Profile image</h2>
+            <form action={UploadUserImg}>
+                <input name="file" id="" type="file"/>
+                <button type="submit">Submit</button>
+                </form>
         </div>
     )
 
