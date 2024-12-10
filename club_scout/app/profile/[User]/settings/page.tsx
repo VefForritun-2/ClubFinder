@@ -6,7 +6,7 @@ export default async function Page({params}: {params:Promise<{User:string}>}){
     const user = (await params).User
     const userData = await getUserData(user)
     const prefernces = await getPreferences()
-    const usersPrefences = await getUserPreferences()
+    const usersPrefences = await getUserPreferences(userData.id)
 
     let preferencesOfUser = []
 

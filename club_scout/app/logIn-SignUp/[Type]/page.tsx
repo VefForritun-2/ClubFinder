@@ -1,6 +1,7 @@
 import { sign_up,sign_in,getPreferences } from "@/app/library/actions" //þarf ekki .tsx
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import errorMessage from "@/app/components/errorMessage"
 
 export async function Form(props :{type: string}){
 
@@ -60,15 +61,21 @@ export default async function Page({params}: {params: Promise<{Type:string}>}){
 
   const type = (await params).Type//nafnið af þetta og nafnið á dynamic route þarf að vera eins
   const cookie = await cookies()
+  let error = <div></div>
 
   if (cookie.has("haveSignedIn")){
     redirect("/profile/"+cookie.get("haveSignedIn")?.value)
+  }
+
+  if (cookie.has("error")){
+    error = await errorMessage(String(cookie.get("error")?.value))
   }
 
   return (
     <div>
       <h1>ClubScout</h1>
       <Form type={type} />
+      {error}
     </div>
 )
 }

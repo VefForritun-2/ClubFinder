@@ -1,11 +1,11 @@
 "use server";
-
 import { supabase } from "@/app/library/supabaseClients";
-
 import { redirect } from "next/navigation"
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers'
 import memberOfClubs from "../components/profileMemberClubs";
+import { useId } from "react";
+import { console } from "inspector";
 
 
 export async function sign_up(formdata: FormData){
@@ -62,6 +62,25 @@ export async function sign_up(formdata: FormData){
         
     }
     else{
+        const cookie = await cookies()
+
+        if (signUpFormData.password !== signUpFormData.passwordCheck){
+            cookie.set("error","password is not the same as the password check",{maxAge:2})
+        }
+        else if (String(signUpFormData.password).length < 8){
+            cookie.set("error","password needs to be 8 in length or longer",{maxAge:2})
+        }
+        else if (isChecked === false){
+            cookie.set("error","you need to pick atleast one preference",{maxAge:2})
+        }
+        else if (String(signUpFormData.username).includes(" ")){
+            cookie.set("error","spaces in usernames are not allowed",{maxAge:2})
+        }
+        else {
+            cookie.set("error","there was an error while signing you up",{maxAge:2})
+        }
+
+        redirect("/logIn-SignUp/sign_up")
         // rendera eitthvað sem sýnir notandinn að lykilorðið voru ekki eins
     }
     // þarf að finna út hvernig að byrta eitthvað þegar eitthvað er að og kannski gera layout
@@ -89,18 +108,29 @@ export async function sign_in(formdata:FormData) {
         if (error){
             console.log("ERROR í log in:",error)
         }
+
+        let foundUser = false
         
         for (let x of data){
-            console.log(x)
             if (x.user_name == signInFormData.username && x.password == signInFormData.password){
                (await cookies()).set("haveSignedIn",x.user_name)
+               foundUser = true
                 redirect("/profile/"+signInFormData.username)//má líka vera id
             }
+        }
+        if (foundUser === false){
+            const cookie = await cookies()
+            cookie.set("error","Wrong username or password",{maxAge:2})
+            redirect("/logIn-SignUp/log_in")
+
         }
 
     }
     else{
-        //redirect-a til sign in og segja notandinn hvað er að (hérna þarf að segja eitthvað um texta)
+        const cookie = await cookies()
+        cookie.set("error","something went wrong while loggin you in",{maxAge:2})
+        redirect("/logIn-SignUp/log_in")
+
     }
 }
 
@@ -235,10 +265,6 @@ export async function getMembers() {
 
 export async function changeInfoAboutUser(formdata:FormData) { // BÆTT VIÐ FILE STUFF NÆSTA TÍMA -_-____-----_----_
 
-    const cookie = await cookies()
-    const userPrefences = await getUserPreferences()
-    const preferences = await getPreferences()
-    
     const changedInfo = {
         oldUsername: formdata.get("old_username"),
         username: formdata.get("username"),
@@ -246,6 +272,10 @@ export async function changeInfoAboutUser(formdata:FormData) { // BÆTT VIÐ FIL
     }
 
     const userData = await getUserData(String(changedInfo.oldUsername))
+    const cookie = await cookies()
+    const userPrefences = await getUserPreferences(userData.id)
+    const preferences = await getPreferences()
+    
     let listOfFormPreferences = []
     let listOfUserPreferences = []
 
@@ -482,7 +512,9 @@ export async function editClub(formdata:FormData){
     }
     else if (isChecked === true){      
 
-        const {error} = await supabase.from("clubs").update({name:editedClubData.clubName,description:editedClubData.description,img:editedClubData.logo}).eq("id",Number(editedClubData.clubId))
+        // tók út img:editedClubData.logo frá update hér neðan
+
+        const {error} = await supabase.from("clubs").update({name:editedClubData.clubName,description:editedClubData.description}).eq("id",Number(editedClubData.clubId))
 
         if (error){
             console.log("ERROR í editclub á meðan að update-a club data:",error)
@@ -566,12 +598,31 @@ export async function allClubCategories(){
 
     return data
 }
-export async function test(){
-
-    const {data} = await supabase.from("club_preferences").select()
-    const bbb = await getPreferences()
-
-    console.log("club preferences:",data)
-    console.log("pref:",bbb)
-    
-}
+export async function UploadUserImg(formdata: FormData) {
+    console.log("run")
+    const cookie = await cookies()
+    const user = await getUserData(cookie.get("haveSignedIn")?.value)
+    const img = formdata.get('file')
+    try {
+        const { data, error } = await supabase.storage
+        .from('profile pic')
+        .upload(img.name, img);
+        console.log("img data ",data)
+        console.log("img error ",error)
+        const imgDtata = data
+        if(!error){
+            const { data, error } = await supabase
+            .from('profiles')
+            .update({ img: img.name })
+            .eq('id',user.id)
+            .select()
+            console.log("profile data ",data)
+            console.log("profile error ",error)
+        }
+      return { success: true };
+    } catch (err) {
+      console.error('Error:', err.message);
+      return { success: false, message: err.message };
+    }
+  }
+  

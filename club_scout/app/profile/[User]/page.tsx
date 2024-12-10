@@ -1,4 +1,5 @@
-import { getUserData,signOut,getAllClubsData,listOfMembersOfClubs,ownedClubs } from "@/app/library/actions"
+
+import { getUserData,signOut,getAllClubsData,listOfMembersOfClubs,UploadUserImg} from "@/app/library/actions"
 import { Suspense } from "react"
 import { cookies } from 'next/headers'
 import { redirect } from "next/navigation"
@@ -72,6 +73,10 @@ export default async function Page({params}: {params:Promise<{User:string}>}){
 
                 <button onClick={signOut}>sign out</button>
                 <Link href={"/profile/"+cookie.get("haveSignedIn")?.value+"/settings"}>Profile Settings</Link>
+                <form action={UploadUserImg}>
+                <input name="file" id="" type="file"/>
+                <button type="submit">Submit</button>
+                </form>
             </div>
         )
     }
