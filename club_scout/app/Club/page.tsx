@@ -9,44 +9,82 @@ export default function DiscoverPage() {
     const [clubs, setClubs] = useState([]); // State for all clubs
     const [userPreferences, setUserPreferences] = useState([]); // State for user preferences
     const [searchTerm, setSearchTerm] = useState(""); // Initialize search term as empty string
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null); // Error state
 
     useEffect(() => {
         async function fetchData() {
-            const fetchedClubs = await getAllClubsData(); // Fetch all clubs
-            const preferences = await getUserPreferences(); // Fetch user preferences
-            setClubs(fetchedClubs);
-            setUserPreferences(preferences);
+            try {
+                setIsLoading(true);
+                const fetchedClubs = await getAllClubsData(); // Fetch all clubs
+                const preferences = await getUserPreferences(); // Fetch user preferences
+                setClubs(fetchedClubs);
+                setUserPreferences(preferences);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                setError('Failed to load data. Please try again later.');
+            } finally {
+                setIsLoading(false);
+            }
         }
         fetchData();
     }, []);
 
-    // Helper to normalize and check categories
-    const normalizeCategory = (club, categoryName) => {
-        if (Array.isArray(club.category)) {
-            return club.category.map((c) => c.toLowerCase()).includes(categoryName);
-        } else if (typeof club.category === "string") {
-            return club.category
-                .split(",")
-                .map((c) => c.trim().toLowerCase())
-                .includes(categoryName);
-        }
-        return false;
-    };
+    // Filter clubs by search term
+    const filteredClubs = clubs.filter((club) =>
+        club.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    // Define categories and categorize clubs dynamically
-    const categories = ["Sports", "Outdoors", "Indoors"]; // Add other categories as needed
+    // Create categories dynamically based on the clubs' category fields
+    const categories = Array.from(new Set(clubs.map(club => club.category))).filter(Boolean);
+
+    // Categorize clubs based on their category field
     const categorizedClubs = categories.reduce((acc, category) => {
-        acc[category] = clubs.filter((club) => normalizeCategory(club, category.toLowerCase()));
+        acc[category] = filteredClubs.filter((club) => club.category === category);
         return acc;
     }, {});
 
     // Recommend clubs based on user preferences
     const recommendedClubs = categories.reduce((acc, category) => {
-        if (userPreferences.includes(category.toLowerCase())) {
+        // Ensure category is a string before calling .toLowerCase()
+        const categoryString = typeof category === 'string' ? category : String(category);
+        
+        // Safely compare category names
+        if (userPreferences.map(p => p.toLowerCase()).includes(categoryString.toLowerCase())) {
             acc[category] = categorizedClubs[category];
         }
         return acc;
     }, {});
+
+    // Render Loading or Error state
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+
+    // Helper Component to display a list of clubs
+    const ClubList = ({ title, clubs }) => {
+        if (!clubs.length) return null;
+        return (
+            <div>
+                <h2>{title}</h2>
+                <div className={styles.clubRow}>
+                    {clubs.map((club) =>
+                        memberOfClubs(
+                            club.name,
+                            club.description,
+                            club.img,
+                            club.id,
+                            false
+                        )
+                    )}
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div>
@@ -54,52 +92,22 @@ export default function DiscoverPage() {
             <input
                 type="text"
                 placeholder="Search Clubs"
-                value={searchTerm} // Controlled input
+                value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={styles.search_bar}
             />
 
-            {/* All Clubs */}
-            <div>
-                <h2>All Clubs</h2>
-                <div className={styles.club_row}>
-                    {clubs
-                        .filter((club) =>
-                            club.name.toLowerCase().includes(searchTerm.toLowerCase())
-                        )
-                        .map((club) =>
-                            memberOfClubs(
-                                club.name,
-                                club.description,
-                                club.img,
-                                club.id,
-                                false
-                            )
-                        )}
-                </div>
-            </div>
+            {/* Display All Clubs */}
+            <ClubList title="All Clubs" clubs={filteredClubs} />
 
-            {/* Display clubs by category */}
-            <div className={styles.recommended_clubs}>
+            {/* Display clubs by dynamically inferred categories */}
+            <div className={styles.recommendedClubs}>
                 {categories.map((category) => (
-                    <div key={category}>
-                        <h2>{category} Clubs</h2>
-                        <div className={styles.club_row}>
-                            {categorizedClubs[category]
-                                .filter((club) =>
-                                    club.name.toLowerCase().includes(searchTerm.toLowerCase())
-                                )
-                                .map((club) =>
-                                    memberOfClubs(
-                                        club.name,
-                                        club.description,
-                                        club.img,
-                                        club.id,
-                                        false
-                                    )
-                                )}
-                        </div>
-                    </div>
+                    <ClubList
+                        key={category}
+                        title={`${category} Clubs`}
+                        clubs={categorizedClubs[category]}
+                    />
                 ))}
             </div>
 
@@ -107,24 +115,11 @@ export default function DiscoverPage() {
             <div>
                 <h2>Recommended for You</h2>
                 {Object.keys(recommendedClubs).map((category) => (
-                    <div key={category}>
-                        <h3>{category} Clubs</h3>
-                        <div className={styles.club_row}>
-                            {recommendedClubs[category]
-                                .filter((club) =>
-                                    club.name.toLowerCase().includes(searchTerm.toLowerCase())
-                                )
-                                .map((club) =>
-                                    memberOfClubs(
-                                        club.name,
-                                        club.description,
-                                        club.img,
-                                        club.id,
-                                        false
-                                    )
-                                )}
-                        </div>
-                    </div>
+                    <ClubList
+                        key={category}
+                        title={`Recommended ${category} Clubs`}
+                        clubs={recommendedClubs[category]}
+                    />
                 ))}
             </div>
         </div>

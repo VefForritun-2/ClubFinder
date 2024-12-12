@@ -1,6 +1,9 @@
 import { sign_up,sign_in,getPreferences } from "@/app/library/actions" //þarf ekki .tsx
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import errorMessage from "@/app/components/errorMessage"
+import styles from "@/app/button.module.css"
+
 
 export async function Form(props :{type: string}){
 
@@ -9,7 +12,7 @@ export async function Form(props :{type: string}){
 
   if (type==="log_in"){
     return(
-      <form style={{margin: "auto",width: "50%", textAlign: "center"}} action={sign_in}>
+      <form style={{display: "grid",gridTemplateColumns:"1fr",justifyItems:"center",margin: "auto",width: "10%", textAlign: "center"}} action={sign_in}>
         
         <h3>Username</h3>
         <input id="username" name="username" required></input>
@@ -17,7 +20,7 @@ export async function Form(props :{type: string}){
         <h3>Password</h3>
         <input type="password" id="password" name="password" required></input>
 
-        <button type="submit">Sign in</button>
+        <button type="submit" className={styles.submitButton}>Sign in</button>
 
         <p>Don't have an account? <a href="/logIn-SignUp/sign_up">Sign up</a></p> {/* Link to sign-up */}
 
@@ -26,7 +29,7 @@ export async function Form(props :{type: string}){
   }
   else if (type==="sign_up"){
     return(
-      <form style={{margin: "auto",width: "50%", textAlign: "center"}} action={sign_up}>
+      <form style={{display: "grid",gridTemplateColumns:"1fr",justifyItems:"center",margin: "auto",width: "50%", textAlign: "center"}} action={sign_up}>
 
         <h3>Username</h3>
         <input id="username" name="username" required></input>
@@ -42,7 +45,7 @@ export async function Form(props :{type: string}){
         {preferences?.map((a)=><div key={a.id}><input type="checkbox" name={a.preference}/> {a.preference}</div>)}
         </div>
 
-        <button type="submit">Sign up</button>
+        <button type="submit" className={styles.submitButton}>Sign up</button>
 
         <p>Already have an account? <a href="/logIn-SignUp/log_in">Log in</a></p> {/* Link to log-in */}
 
@@ -60,15 +63,21 @@ export default async function Page({params}: {params: Promise<{Type:string}>}){
 
   const type = (await params).Type//nafnið af þetta og nafnið á dynamic route þarf að vera eins
   const cookie = await cookies()
+  let error = <div></div>
 
   if (cookie.has("haveSignedIn")){
     redirect("/profile/"+cookie.get("haveSignedIn")?.value)
+  }
+
+  if (cookie.has("error")){
+    error = await errorMessage(String(cookie.get("error")?.value))
   }
 
   return (
     <div>
       <h1>ClubScout</h1>
       <Form type={type} />
+      {error}
     </div>
 )
 }

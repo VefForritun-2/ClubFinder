@@ -1,26 +1,39 @@
 .club_element {
   flex-shrink: 0;
   width: 375px;
-  height: 200px;
+  height: auto;
 
   display: flex;
+  flex-direction: column;
   gap: 16px;
+
+  /*border: 1px solid var(--text);*/
+  /*background-color: var(--selection);*/
+  border-radius: 8px;
 }
 
 .club_element img {
-  width: 114px;
-  height: 100%;
+  /*width: 114px;
+  height: 100%;*/
+  width: 100px;
+  height: 100px;
+
   object-fit: cover;
 
   border-radius: 8px;
 }
 
-.club_details {
+.club_info {
+  display: flex;
+  gap: 16px;
+}
+
+.club_text {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  justify-content: center;
 
-  padding: 16px 0px;
+  width: 100%;
 }
 
 .club_title {
@@ -30,4 +43,14 @@
 
 .club_description {
   font-size: 14px;
+}
+
+
+.club_actions {
+  display: flex;
+  gap: 16px;
+}
+
+.club_action_details {
+  margin-left: auto;
 }

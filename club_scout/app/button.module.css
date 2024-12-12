@@ -1,0 +1,18 @@
+
+
+.submitButton{
+    font-Size: 10px;
+    width: 100px;
+    height: 30px;
+    padding: 6px;
+    border-radius: 8px;
+    background-Color: blue;
+    border: #272749 2px solid;
+    transition: width 0.5s, height 0.5s
+}
+
+.submitButton:hover{
+    cursor: pointer;
+    width: 105px;
+    height: 35px;
+}
